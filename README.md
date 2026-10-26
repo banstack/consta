@@ -11,19 +11,7 @@ A macOS menu bar app for tracking focus sessions by label, with goals, XP, level
 - **Badges.** Nine achievements, from First Step to a 30-day Marathon streak.
 - **Private.** Everything is stored locally with SwiftData. No account, no server.
 
-Mockups of every screen live in the [Consta Screens gallery](https://claude.ai/artifact/1cqrPNBm5Tqvim7gr6Sojm).
-
-## Screenshots
-
-| Idle | Running | Session complete |
-| --- | --- | --- |
-| ![Idle](docs/screenshots/idle.png) | ![Running](docs/screenshots/running.png) | ![Session complete](docs/screenshots/complete.png) |
-
-| Goals | Progress | Labels |
-| --- | --- | --- |
-| ![Goals](docs/screenshots/goals.png) | ![Progress and badges](docs/screenshots/badges.png) | ![Labels](docs/screenshots/labels.png) |
-
-These were captured from the running app with the debug driver (below). The popover and menu bar item are the app's real views; the strip of menu bar and the backdrop behind them are drawn by the driver.
+Mockups and screenshots of every screen live in the [Consta Screens gallery](https://claude.ai/artifact/1cqrPNBm5Tqvim7gr6Sojm).
 
 ## Requirements
 
