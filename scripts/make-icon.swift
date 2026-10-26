@@ -1,4 +1,4 @@
-// Renders the Consta app icon (a small constellation on a night-sky squircle) into an .icns.
+// Renders the Consta app icon (the menu bar glyph in ink on a pale glass squircle) into an .icns.
 //
 //     swift scripts/make-icon.swift OUTPUT.icns
 //
@@ -24,7 +24,7 @@ func render(pixels: Int) -> NSBitmapImageRep {
 
     NSGraphicsContext.saveGraphicsState()
     let shadow = NSShadow()
-    shadow.shadowColor = NSColor.black.withAlphaComponent(0.3)
+    shadow.shadowColor = NSColor.black.withAlphaComponent(0.18)
     shadow.shadowBlurRadius = 20
     shadow.shadowOffset = NSSize(width: 0, height: -10)
     shadow.set()
@@ -34,51 +34,43 @@ func render(pixels: Int) -> NSBitmapImageRep {
 
     NSGraphicsContext.saveGraphicsState()
     shape.addClip()
+    // Pale glass: near-white at the top, a cool grey at the bottom.
     NSGradient(colors: [
-        NSColor(red: 0.36, green: 0.30, blue: 0.95, alpha: 1),
-        NSColor(red: 0.12, green: 0.10, blue: 0.38, alpha: 1),
-        NSColor(red: 0.05, green: 0.05, blue: 0.16, alpha: 1),
-    ])!.draw(in: tile, angle: -70)
-    // Soft glow behind the constellation.
-    NSGradient(colors: [NSColor.white.withAlphaComponent(0.18), NSColor.white.withAlphaComponent(0)])!
-        .draw(fromCenter: NSPoint(x: 560, y: 600), radius: 0, toCenter: NSPoint(x: 560, y: 600), radius: 420, options: [])
+        NSColor(red: 1.00, green: 1.00, blue: 1.00, alpha: 1),
+        NSColor(red: 0.90, green: 0.91, blue: 0.93, alpha: 1),
+    ])!.draw(in: tile, angle: -90)
 
-    // Faint background stars.
-    let dust: [(CGFloat, CGFloat, CGFloat)] = [
-        (210, 790, 5), (330, 860, 3.5), (820, 830, 4), (760, 260, 3.5), (250, 300, 4),
-        (880, 560, 3), (420, 210, 3), (180, 560, 3), (650, 870, 3),
-    ]
-    NSColor.white.withAlphaComponent(0.45).setFill()
-    for (x, y, r) in dust { NSBezierPath(ovalIn: CGRect(x: x - r, y: y - r, width: r * 2, height: r * 2)).fill() }
-
-    // The constellation, echoing the menu bar glyph.
-    let stars: [CGPoint] = [
-        CGPoint(x: 290, y: 390), CGPoint(x: 450, y: 640), CGPoint(x: 640, y: 520),
-        CGPoint(x: 760, y: 740), CGPoint(x: 700, y: 330),
-    ]
-    let lines = NSBezierPath()
-    lines.move(to: stars[0])
-    for star in stars.dropFirst() { lines.line(to: star) }
-    lines.move(to: stars[2])
-    lines.line(to: stars[4])
-    lines.lineWidth = 14
-    lines.lineCapStyle = .round
-    lines.lineJoinStyle = .round
-    NSColor.white.withAlphaComponent(0.55).setStroke()
-    lines.stroke()
-
-    for (index, star) in stars.enumerated() {
-        let radius: CGFloat = index == 1 ? 50 : 36
-        NSGradient(colors: [NSColor.white.withAlphaComponent(0.55), NSColor.white.withAlphaComponent(0)])!
-            .draw(fromCenter: star, radius: 0, toCenter: star, radius: radius * 2.6, options: [])
-        NSColor.white.setFill()
-        NSBezierPath(ovalIn: CGRect(x: star.x - radius, y: star.y - radius, width: radius * 2, height: radius * 2)).fill()
+    // The menu bar glyph, drawn on its 16pt grid and scaled up: three stars joined by two lines.
+    let ink = NSColor(red: 0x1d / 255, green: 0x1d / 255, blue: 0x1f / 255, alpha: 1)
+    let grid: CGFloat = 38
+    func point(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
+        CGPoint(x: 512 + (x - 8) * grid, y: 512 - (y - 7.5) * grid)
     }
+    let stars = [point(3, 11), point(8, 4), point(13, 9)]
+    let radius = 1.6 * grid
+    let glyph = NSBezierPath()
+    for star in stars {
+        glyph.appendOval(in: CGRect(x: star.x - radius, y: star.y - radius, width: radius * 2, height: radius * 2))
+    }
+    for (from, to) in zip(stars, stars.dropFirst()) {
+        let dx = to.x - from.x, dy = to.y - from.y
+        let trim = radius / hypot(dx, dy)
+        glyph.move(to: CGPoint(x: from.x + dx * trim, y: from.y + dy * trim))
+        glyph.line(to: CGPoint(x: to.x - dx * trim, y: to.y - dy * trim))
+    }
+    glyph.lineWidth = grid
+    glyph.lineCapStyle = .round
+    ink.setStroke()
+    glyph.stroke()
     NSGraphicsContext.restoreGraphicsState()
 
-    // Thin highlight on the rim, like glass.
-    NSColor.white.withAlphaComponent(0.22).setStroke()
-    let rim = NSBezierPath(roundedRect: tile.insetBy(dx: 2, dy: 2), xRadius: 183, yRadius: 183)
+    // A hairline edge and a bright inner rim, like glass.
+    NSColor.black.withAlphaComponent(0.08).setStroke()
+    let edge = NSBezierPath(roundedRect: tile.insetBy(dx: 1, dy: 1), xRadius: 184, yRadius: 184)
+    edge.lineWidth = 2
+    edge.stroke()
+    NSColor.white.withAlphaComponent(0.9).setStroke()
+    let rim = NSBezierPath(roundedRect: tile.insetBy(dx: 4, dy: 4), xRadius: 181, yRadius: 181)
     rim.lineWidth = 4
     rim.stroke()
 
