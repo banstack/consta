@@ -25,7 +25,7 @@ Pick what you're working on, press Start, and watch the time add up. Daily goals
 
 Download the latest `Consta-<version>.dmg` from [Releases](https://github.com/banstack/consta/releases/latest), open it, and drag Consta to Applications. Consta needs macOS 27 or later.
 
-The DMG isn't notarized yet, so macOS blocks the first launch. Open **System Settings › Privacy & Security** and click **Open Anyway** once.
+Releases are signed and notarized by Apple, so Consta opens like any other app. Releases up to v0.2.0 weren't notarized: if macOS blocks one of those on first launch, open **System Settings › Privacy & Security** and click **Open Anyway** once.
 
 ## Build from source
 
@@ -62,13 +62,13 @@ scripts/make-dmg.sh
 
 #### Releases
 
-Pushing a tag like `v0.1.0` runs `.github/workflows/release.yml`, which tests, builds the DMG and attaches it to a GitHub release. It signs and notarizes when these repository secrets are set and builds an unsigned DMG otherwise:
+Pushing a tag like `v0.1.0` runs `.github/workflows/release.yml`, which tests, builds the DMG and attaches it to a GitHub release. It signs and notarizes when these repository secrets are set and builds an unsigned DMG otherwise. With a certificate but no notarization credentials the build fails, since a signed but unnotarized DMG is still blocked by Gatekeeper.
 
 | Secret | What it is |
 | --- | --- |
 | `MACOS_CERTIFICATE` | Your Developer ID Application certificate exported as .p12, base64-encoded (`base64 -i cert.p12 \| pbcopy`) |
 | `MACOS_CERTIFICATE_PASSWORD` | The .p12 export password |
-| `MACOS_SIGN_IDENTITY` | The identity name, e.g. `Developer ID Application: Your Name (TEAMID)` |
+| `MACOS_SIGN_IDENTITY` | Optional. The identity name, e.g. `Developer ID Application: Your Name (TEAMID)`. By default the workflow uses the Developer ID identity in `MACOS_CERTIFICATE`. |
 | `APPLE_ID`, `APPLE_TEAM_ID`, `APPLE_APP_PASSWORD` | The Apple ID, team ID and app-specific password used for notarization |
 
 ### Scripted UI runs
