@@ -13,6 +13,18 @@ A macOS menu bar app for tracking focus sessions by label, with goals, XP, level
 
 Mockups of every screen live in the [Consta Screens gallery](https://claude.ai/artifact/1cqrPNBm5Tqvim7gr6Sojm).
 
+## Screenshots
+
+| Idle | Running | Session complete |
+| --- | --- | --- |
+| ![Idle](docs/screenshots/idle.png) | ![Running](docs/screenshots/running.png) | ![Session complete](docs/screenshots/complete.png) |
+
+| Goals | Progress | Labels |
+| --- | --- | --- |
+| ![Goals](docs/screenshots/goals.png) | ![Progress and badges](docs/screenshots/badges.png) | ![Labels](docs/screenshots/labels.png) |
+
+These were captured from the running app with the debug driver (below). The popover and menu bar item are the app's real views; the strip of menu bar and the backdrop behind them are drawn by the driver.
+
 ## Requirements
 
 - macOS 27 or later
@@ -30,6 +42,14 @@ Or open `Package.swift` in Xcode and run the `Consta` scheme. The app has no Doc
 
 ```bash
 swift test
+```
+
+### Scripted UI runs
+
+Debug builds include a small driver for exercising the UI and taking screenshots without Accessibility or Screen Recording permission. It uses an in-memory store, so your data isn't touched. Commands are read from stdin, one per line (`open`, `click X Y`, `type TEXT`, `key return`, `sleep SECONDS`, `shot PATH`, `dump`, `quit`; see `Sources/Consta/Support/DebugDriver.swift`):
+
+```bash
+printf 'open\nsleep 1\nshot /tmp/idle.png\nquit\n' | CONSTA_DRIVER=1 swift run Consta
 ```
 
 ## Layout
