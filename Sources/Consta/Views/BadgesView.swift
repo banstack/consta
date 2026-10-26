@@ -32,7 +32,7 @@ struct BadgesView: View {
                 Text("\(earned.count) of \(BadgeCatalog.all.count) earned").font(.caption).foregroundStyle(.secondary)
             }
 
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 8) {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8, alignment: .top), count: 3), spacing: 8) {
                 ForEach(BadgeCatalog.all) { badge in
                     BadgeTile(badge: badge, isEarned: earned.contains(badge.id))
                 }

@@ -12,8 +12,16 @@ struct IdleView: View {
     @Query private var goals: [Goal]
     @State private var selectedID: UUID?
 
+    /// Most recently used first; labels never used keep their creation order after those.
     private var recentLabels: [ActivityLabel] {
-        labels.sorted { ($0.lastUsedAt ?? $0.createdAt) > ($1.lastUsedAt ?? $1.createdAt) }
+        labels.sorted { a, b in
+            switch (a.lastUsedAt, b.lastUsedAt) {
+            case let (x?, y?): x > y
+            case (_?, nil): true
+            case (nil, _?): false
+            case (nil, nil): a.createdAt < b.createdAt
+            }
+        }
     }
 
     private var selected: ActivityLabel? {

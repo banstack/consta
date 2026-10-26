@@ -62,3 +62,20 @@ struct GlassCard<Content: View>: View {
             .glassEffect(.regular, in: .rect(cornerRadius: 16))
     }
 }
+
+/// A vertical scroll view as tall as its content, up to `maxHeight`. The menu bar window sizes itself
+/// to its content's ideal height, and a plain ScrollView's is tiny, so lists would collapse to a sliver
+/// (or leave a gap when empty).
+struct FittedScrollView<Content: View>: View {
+    var maxHeight: CGFloat
+    @ViewBuilder var content: Content
+    @State private var contentHeight: CGFloat = 0
+
+    var body: some View {
+        ScrollView {
+            content.onGeometryChange(for: CGFloat.self) { $0.size.height } action: { contentHeight = $0 }
+        }
+        .frame(height: min(contentHeight, maxHeight))
+        .scrollBounceBehavior(.basedOnSize)
+    }
+}
