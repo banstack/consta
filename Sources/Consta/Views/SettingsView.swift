@@ -44,7 +44,7 @@ struct SettingsView: View {
                     SwitchRow("Show timer in menu bar", isOn: $showTimer)
                         .padding(.horizontal, 10)
                         .frame(height: 34)
-                    SwitchRow("Open at login", isOn: Binding(get: { opensAtLogin }, set: setOpensAtLogin))
+                    SwitchRow("Open at login", isOn: Binding(get: { opensAtLogin }, set: { setOpensAtLogin($0) }))
                         .padding(.horizontal, 10)
                         .frame(height: 34)
                         .disabled(!AppVersion.isBundled)
