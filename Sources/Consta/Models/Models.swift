@@ -110,6 +110,18 @@ enum ConstaSchema {
         ActivityLabel.self, FocusSession.self, Goal.self, XPEvent.self, BadgeUnlock.self,
     ]
 
+    /// Where the store lives. Without a bundle ID (e.g. `swift run`), SwiftData's default is a
+    /// generic `~/Library/Application Support/default.store` that any other unbundled app would share,
+    /// so give Consta its own folder.
+    static func configuration(inMemory: Bool = false) -> ModelConfiguration {
+        if inMemory {
+            return ModelConfiguration(isStoredInMemoryOnly: true)
+        }
+        let folder = URL.applicationSupportDirectory.appending(path: "Consta", directoryHint: .isDirectory)
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        return ModelConfiguration(url: folder.appending(path: "Consta.store"))
+    }
+
     /// Starter labels so the popover isn't empty on first launch.
     static func seedIfNeeded(_ context: ModelContext) {
         let count = (try? context.fetchCount(FetchDescriptor<ActivityLabel>())) ?? 0
