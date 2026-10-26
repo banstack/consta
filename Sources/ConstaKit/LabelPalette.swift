@@ -7,6 +7,11 @@ public enum LabelPalette {
         public let name: String
         public let hex: String
         public var id: String { hex }
+
+        public init(name: String, hex: String) {
+            self.name = name
+            self.hex = hex
+        }
     }
 
     public static let all: [Swatch] = [
