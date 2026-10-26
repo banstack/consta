@@ -1,72 +1,133 @@
 import AppKit
+import ServiceManagement
 import SwiftData
 import SwiftUI
 
-/// Manage labels and quit.
+/// Labels, a couple of preferences, and which build this is.
 struct SettingsView: View {
     @Binding var screen: Screen
-    @Environment(\.modelContext) private var context
     @Query(filter: #Predicate<ActivityLabel> { !$0.isArchived }, sort: \.createdAt) private var labels: [ActivityLabel]
-    @State private var newName = ""
-    @State private var newColor = Color(hex: "#0A5AD6")
+    @AppStorage(MenuBarLabel.showTimerKey) private var showTimer = true
+    @State private var opensAtLogin = SMAppService.mainApp.status == .enabled
+    @State private var copied = false
 
     var body: some View {
-        VStack(spacing: 14) {
-            ScreenHeader(title: "Labels", screen: $screen)
+        VStack(spacing: 12) {
+            ScreenHeader(title: "Settings", screen: $screen)
 
-            FittedScrollView(maxHeight: 280) {
-                VStack(spacing: 6) {
-                    ForEach(labels) { label in
-                        LabelRow(label: label)
+            VStack(spacing: 4) {
+                SectionTitle("Labels")
+                GlassCard(padding: 4) {
+                    FittedScrollView(maxHeight: 180) {
+                        VStack(spacing: 0) {
+                            ForEach(labels) { label in
+                                row { screen = .label(label.id) } content: {
+                                    LabelDot(hex: label.colorHex)
+                                    Text(label.name)
+                                    Spacer()
+                                    Image(systemName: "chevron.right").font(.caption2.weight(.semibold)).foregroundStyle(.tertiary)
+                                }
+                            }
+                        }
+                    }
+                    row { screen = .label(nil) } content: {
+                        Image(systemName: "plus").font(.caption.weight(.bold))
+                        Text("New label").fontWeight(.medium)
+                        Spacer()
                     }
                 }
             }
 
-            GlassCard {
-                HStack {
-                    ColorPicker("Color", selection: $newColor, supportsOpacity: false).labelsHidden()
-                    TextField("New label", text: $newName)
-                        .textFieldStyle(.roundedBorder)
-                        .onSubmit(add)
-                    Button("Add", action: add)
-                        .buttonStyle(.glassProminent)
-                        .disabled(newName.trimmingCharacters(in: .whitespaces).isEmpty)
+            VStack(spacing: 4) {
+                SectionTitle("General")
+                GlassCard(padding: 4) {
+                    Toggle("Show timer in menu bar", isOn: $showTimer)
+                        .padding(.horizontal, 10)
+                        .frame(height: 34)
+                    Toggle("Open at login", isOn: Binding(get: { opensAtLogin }, set: setOpensAtLogin))
+                        .padding(.horizontal, 10)
+                        .frame(height: 34)
+                        .disabled(!AppVersion.isBundled)
+                        .help(AppVersion.isBundled ? "" : "Only available in the installed app")
+                }
+                .toggleStyle(.switch)
+                .controlSize(.mini)
+                .tint(.primary)
+                .font(.callout)
+            }
+
+            VStack(spacing: 4) {
+                SectionTitle("About")
+                GlassCard(padding: 10) {
+                    HStack(spacing: 10) {
+                        Image(nsImage: NSApp.applicationIconImage)
+                            .resizable()
+                            .frame(width: 36, height: 36)
+                            .accessibilityHidden(true)
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text("Consta").font(.callout.weight(.semibold))
+                            Text(AppVersion.description)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .monospacedDigit()
+                                .textSelection(.enabled)
+                        }
+                        Spacer()
+                        Button(copied ? "Copied" : "Copy") {
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString("Consta \(AppVersion.description)", forType: .string)
+                            withAnimation(.consta) { copied = true }
+                        }
+                        .buttonStyle(.glass)
+                        .controlSize(.small)
+                        .contentTransition(.interpolate)
+                        .help("Copy the version, for bug reports")
+                    }
                 }
             }
 
-            Button("Quit Consta") { NSApplication.shared.terminate(nil) }
-                .buttonStyle(.glass)
-                .keyboardShortcut("q")
+            HStack {
+                Link("Release notes", destination: URL(string: "https://github.com/banstack/consta/releases")!)
+                Spacer()
+                Button("Quit Consta") { NSApplication.shared.terminate(nil) }
+                    .buttonStyle(.plain)
+                    .keyboardShortcut("q")
+            }
+            .font(.caption)
+            .foregroundStyle(.primary)
+            .padding(.horizontal, 4)
         }
     }
 
-    private func add() {
-        let name = newName.trimmingCharacters(in: .whitespaces)
-        guard !name.isEmpty else { return }
-        context.insert(ActivityLabel(name: name, colorHex: newColor.hexString))
-        newName = ""
+    private func row<Content: View>(action: @escaping () -> Void, @ViewBuilder content: () -> Content) -> some View {
+        Button(action: action) {
+            HStack(spacing: 10) { content() }
+                .font(.callout)
+                .padding(.horizontal, 10)
+                .frame(height: 34)
+                .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func setOpensAtLogin(_ on: Bool) {
+        do {
+            if on { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
+        } catch {
+            NSSound.beep()
+        }
+        opensAtLogin = SMAppService.mainApp.status == .enabled
     }
 }
 
-private struct LabelRow: View {
-    @Bindable var label: ActivityLabel
+/// The marketing version and build number that scripts/build-app.sh writes into Info.plist.
+enum AppVersion {
+    static var isBundled: Bool { Bundle.main.bundleIdentifier != nil }
 
-    var body: some View {
-        HStack(spacing: 8) {
-            ColorPicker("Color", selection: Binding(
-                get: { Color(hex: label.colorHex) },
-                set: { label.colorHex = $0.hexString }
-            ), supportsOpacity: false)
-            .labelsHidden()
-            TextField("Name", text: $label.name)
-                .textFieldStyle(.plain)
-            Button("Archive", systemImage: "archivebox") { label.isArchived = true }
-                .labelStyle(.iconOnly)
-                .buttonStyle(.borderless)
-                .help("Archive label (keeps its history)")
-        }
-        .padding(.horizontal, 12)
-        .frame(height: 36)
-        .glassEffect(.regular, in: .rect(cornerRadius: 12))
+    static var description: String {
+        let info = Bundle.main.infoDictionary ?? [:]
+        guard let version = info["CFBundleShortVersionString"] as? String else { return "Development build" }
+        let build = info["CFBundleVersion"] as? String ?? "?"
+        return "Version \(version) (build \(build))"
     }
 }

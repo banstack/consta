@@ -18,13 +18,13 @@ struct BadgesView: View {
             VStack(spacing: 8) {
                 LevelRing(progress: level, size: 76)
                 Text("Level \(level.level)").font(.headline)
-                ProgressLine(fraction: level.fraction, color: .accentColor, height: 6)
+                ProgressLine(fraction: level.fraction, color: .primary, height: 4)
                 Text("\(level.xpIntoLevel) / \(level.xpForNextLevel) XP to Level \(level.level + 1)")
                     .font(.caption).foregroundStyle(.secondary).monospacedDigit()
             }
             .padding(16)
             .frame(maxWidth: .infinity)
-            .glassEffect(.regular, in: .rect(cornerRadius: 20))
+            .background(.background.opacity(0.55), in: .rect(cornerRadius: 16))
 
             HStack {
                 Text("Badges").font(.headline)
@@ -49,9 +49,9 @@ private struct BadgeTile: View {
         VStack(spacing: 4) {
             Image(systemName: isEarned ? badge.symbol : "lock.fill")
                 .font(.body.weight(.semibold))
-                .foregroundStyle(isEarned ? .white : .secondary)
+                .foregroundStyle(isEarned ? .primary : .tertiary)
                 .frame(width: 38, height: 38)
-                .glassEffect(isEarned ? .regular.tint(Color(hex: badge.colorHex)) : .regular, in: .circle)
+                .glassEffect(.regular, in: .circle)
             Text(badge.name).font(.caption.weight(.semibold)).lineLimit(1)
             Text(badge.detail).font(.caption2).foregroundStyle(.secondary).multilineTextAlignment(.center).lineLimit(2)
         }

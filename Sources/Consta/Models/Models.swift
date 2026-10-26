@@ -124,11 +124,23 @@ enum ConstaSchema {
 
     /// Starter labels so the popover isn't empty on first launch.
     static func seedIfNeeded(_ context: ModelContext) {
-        let count = (try? context.fetchCount(FetchDescriptor<ActivityLabel>())) ?? 0
-        guard count == 0 else { return }
-        for (name, hex) in [("Deep Work", "#0A5AD6"), ("Design", "#8E3BD1"), ("Reading", "#C25E00"), ("Exercise", "#1F8A3B")] {
+        let labels = (try? context.fetch(FetchDescriptor<ActivityLabel>())) ?? []
+        guard labels.isEmpty else { return updateSeedColors(labels, context: context) }
+        for (name, hex) in [("Deep Work", "#4C7BD9"), ("Design", "#9A6BD1"), ("Reading", "#C4963A"), ("Exercise", "#4E9C77")] {
             context.insert(ActivityLabel(name: name, colorHex: hex))
         }
         try? context.save()
+    }
+
+    /// Moves starter labels still on their v0.1 colors onto the calmer palette. Colors people picked stay.
+    private static func updateSeedColors(_ labels: [ActivityLabel], context: ModelContext) {
+        var changed = false
+        for label in labels {
+            if let replacement = LabelPalette.legacySeedColors[label.colorHex.uppercased()] {
+                label.colorHex = replacement
+                changed = true
+            }
+        }
+        if changed { try? context.save() }
     }
 }

@@ -5,11 +5,13 @@ A macOS menu bar app for tracking focus sessions by label, with goals, XP, level
 ## Features
 
 - **Sessions from the menu bar.** Pick a label, press Start, and the live timer shows next to the menu bar icon. Pause, resume, stop.
-- **Labels.** Color-coded tags for what you're working on (Deep Work, Reading, …). The four you used most recently are one click away.
+- **Labels.** Tags for what you're working on (Deep Work, Reading, …), each with a color from a ten-swatch palette. The four you used most recently are one click away.
+- **History.** Every past session by day, with its note and XP, and the last seven days at a glance.
 - **Goals.** Daily or weekly time targets per label, with streaks.
 - **XP and levels.** 1 XP per focused minute, +50 XP for a daily goal, +200 XP for a weekly goal. Level 1 → 2 takes 300 XP and each level takes 250 XP more than the last.
 - **Badges.** Nine achievements, from First Step to a 30-day Marathon streak.
 - **Private.** Everything is stored locally with SwiftData. No account, no server.
+- **Settings.** Manage labels, hide the menu bar timer, open at login, and see the version and build number.
 
 Mockups and screenshots of every screen live in the [Consta Screens gallery](https://claude.ai/artifact/1cqrPNBm5Tqvim7gr6Sojm).
 

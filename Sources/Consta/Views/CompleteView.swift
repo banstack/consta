@@ -14,11 +14,11 @@ struct CompleteView: View {
         VStack(spacing: 14) {
             VStack(spacing: 6) {
                 Image(systemName: "checkmark")
-                    .font(.title2.bold())
-                    .foregroundStyle(.white)
+                    .font(.title3.bold())
                     .frame(width: 44, height: 44)
-                    .glassEffect(.regular.tint(Color(hex: finished.session.colorHex)), in: .circle)
-                Text("Session complete").font(.title3.bold())
+                    .glassEffect(.regular, in: .circle)
+                    .symbolEffect(.bounce, value: outcome != nil)
+                Text("Session complete").font(.headline)
                 Text("\(finished.session.labelName) · \(DurationFormat.short(finished.focusedSeconds)) · \(finished.session.start, style: .time)–\(finished.end, style: .time)")
                     .font(.caption).foregroundStyle(.secondary)
             }
@@ -29,7 +29,8 @@ struct CompleteView: View {
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                         .padding(10)
-                        .glassEffect(.regular.tint(.accentColor), in: .rect(cornerRadius: 14))
+                        .glassEffect(.regular, in: .rect(cornerRadius: 14))
+                        .transition(.scale(scale: 0.9).combined(with: .opacity))
                 }
 
                 GlassCard {
@@ -47,7 +48,7 @@ struct CompleteView: View {
                             Label(badge.name, systemImage: badge.symbol)
                                 .font(.caption.weight(.semibold))
                                 .padding(.horizontal, 10).padding(.vertical, 6)
-                                .glassEffect(.regular.tint(Color(hex: badge.colorHex).opacity(0.4)), in: .capsule)
+                                .glassEffect(.regular, in: .capsule)
                         }
                     }
                     .accessibilityLabel("New badges")
@@ -63,6 +64,7 @@ struct CompleteView: View {
                     tracker.finished = nil
                 }
                 .buttonStyle(.glass)
+                .controlSize(.large)
 
                 Button {
                     if let outcome {
@@ -70,15 +72,15 @@ struct CompleteView: View {
                     }
                     tracker.finished = nil
                 } label: {
-                    Text("Save session").frame(maxWidth: .infinity)
+                    Text("Save session")
                 }
-                .buttonStyle(.glassProminent)
+                .buttonStyle(.ink)
                 .keyboardShortcut(.defaultAction)
             }
-            .controlSize(.large)
         }
         .task(id: finished) {
-            outcome = ProgressStore.preview(finished, context: context)
+            let preview = ProgressStore.preview(finished, context: context)
+            withAnimation(.consta) { outcome = preview }
         }
     }
 
