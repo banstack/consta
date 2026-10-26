@@ -15,13 +15,16 @@ extension Animation {
 /// The primary action on a screen: an ink capsule that inverts in dark mode.
 struct InkButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.colorScheme) private var colorScheme
 
     func makeBody(configuration: Configuration) -> some View {
+        // Solid colors rather than .primary/.background, which glass renders as translucent vibrancy.
+        let ink: Color = colorScheme == .dark ? .white : .black
         configuration.label
             .font(.callout.weight(.semibold))
-            .foregroundStyle(.background)
+            .foregroundStyle(colorScheme == .dark ? Color.black : Color.white)
             .frame(maxWidth: .infinity, minHeight: 40)
-            .background(.primary, in: .capsule)
+            .background(ink, in: .capsule)
             .opacity(isEnabled ? (configuration.isPressed ? 0.8 : 1) : 0.35)
             .scaleEffect(configuration.isPressed ? 0.98 : 1)
             .animation(.smooth(duration: 0.15), value: configuration.isPressed)
