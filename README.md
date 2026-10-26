@@ -1,34 +1,49 @@
+<div align="center">
+
 # Consta
 
-A macOS menu bar app for tracking focus sessions by label, with goals, XP, levels and badges to make productivity a bit of a game. The successor to [insession](https://github.com/banstack/insession), rebuilt as a native SwiftUI app with Apple's Liquid Glass design.
+**Focus sessions that live in your menu bar.**
+
+Pick what you're working on, press Start, and watch the time add up. Daily goals, streaks, XP and badges make the work feel like progress.
+
+[**Download for macOS**](https://github.com/banstack/consta/releases/latest) · [Build from source](#build-from-source) · [Contribute](#contributing)
+
+<img src=".github/assets/walkthrough.gif" width="420" alt="Starting a session from the menu bar, browsing History, and creating a label in Consta">
+
+</div>
 
 ## Features
 
-- **Sessions from the menu bar.** Pick a label, press Start, and the live timer shows next to the menu bar icon. Pause, resume, stop.
-- **Labels.** Tags for what you're working on (Deep Work, Reading, …), each with a color from a ten-swatch palette. The four you used most recently are one click away.
+- **One click to start.** Choose a label and a live timer appears next to the menu bar icon. Pause, resume and stop without leaving what you're doing.
 - **History.** Every past session by day, with its note and XP, and the last seven days at a glance.
-- **Goals.** Daily or weekly time targets per label, with streaks.
-- **XP and levels.** 1 XP per focused minute, +50 XP for a daily goal, +200 XP for a weekly goal. Level 1 → 2 takes 300 XP and each level takes 250 XP more than the last.
-- **Badges.** Nine achievements, from First Step to a 30-day Marathon streak.
-- **Private.** Everything is stored locally with SwiftData. No account, no server.
-- **Settings.** Manage labels, hide the menu bar timer, open at login, and see the version and build number.
+- **Goals and streaks.** Daily or weekly time targets per label.
+- **Levels and badges.** Earn 1 XP per focused minute and bonuses for meeting goals, level up, and unlock nine badges along the way.
+- **Labels.** Pick a color for each label from a calm ten-color palette.
+- **Native and private.** Built with SwiftUI and Liquid Glass. Everything is stored on your Mac with SwiftData. There's no account and no server.
 
-Mockups and screenshots of every screen live in the [Consta Screens gallery](https://claude.ai/artifact/1cqrPNBm5Tqvim7gr6Sojm).
+## Install
 
-## Requirements
+Download the latest `Consta-<version>.dmg` from [Releases](https://github.com/banstack/consta/releases/latest), open it, and drag Consta to Applications. Consta needs macOS 27 or later.
 
-- macOS 27 or later
-- Xcode with the macOS 27 SDK
+The DMG isn't notarized yet, so macOS blocks the first launch. Open **System Settings › Privacy & Security** and click **Open Anyway** once.
 
-## Run it
+## Build from source
+
+You need Xcode with the macOS 27 SDK.
 
 ```bash
+git clone https://github.com/banstack/consta.git
+cd consta
 swift run Consta
 ```
 
-Or open `Package.swift` in Xcode and run the `Consta` scheme. The app has no Dock icon; look for the constellation icon in the menu bar.
+You can also open `Package.swift` in Xcode and run the `Consta` scheme. Consta has no Dock icon, so look for the constellation icon in the menu bar.
 
-## Package a DMG
+## Contributing
+
+Issues and pull requests are welcome. Run `swift test` before opening a PR.
+
+### Package a DMG
 
 ```bash
 scripts/make-dmg.sh
@@ -45,7 +60,7 @@ CONSTA_NOTARY_PROFILE=consta \
 scripts/make-dmg.sh
 ```
 
-### Releases
+#### Releases
 
 Pushing a tag like `v0.1.0` runs `.github/workflows/release.yml`, which tests, builds the DMG and attaches it to a GitHub release. It signs and notarizes when these repository secrets are set and builds an unsigned DMG otherwise:
 
@@ -56,21 +71,15 @@ Pushing a tag like `v0.1.0` runs `.github/workflows/release.yml`, which tests, b
 | `MACOS_SIGN_IDENTITY` | The identity name, e.g. `Developer ID Application: Your Name (TEAMID)` |
 | `APPLE_ID`, `APPLE_TEAM_ID`, `APPLE_APP_PASSWORD` | The Apple ID, team ID and app-specific password used for notarization |
 
-## Tests
-
-```bash
-swift test
-```
-
 ### Scripted UI runs
 
-Debug builds include a small driver for exercising the UI and taking screenshots without Accessibility or Screen Recording permission. It uses an in-memory store, so your data isn't touched. Commands are read from stdin, one per line (`open`, `click X Y`, `type TEXT`, `key return`, `sleep SECONDS`, `shot PATH`, `dump`, `quit`; see `Sources/Consta/Support/DebugDriver.swift`):
+Debug builds include a small driver for exercising the UI and taking screenshots without Accessibility or Screen Recording permission. It uses an in-memory store, so your data isn't touched. Commands are read from stdin, one per line (`open`, `click X Y`, `type TEXT`, `key return`, `sleep SECONDS`, `shot PATH`, `sample`, `dump`, `quit`; see `Sources/Consta/Support/DebugDriver.swift`):
 
 ```bash
 printf 'open\nsleep 1\nshot /tmp/idle.png\nquit\n' | CONSTA_DRIVER=1 swift run Consta
 ```
 
-## Layout
+### Project layout
 
 | Path | What's there |
 | --- | --- |
