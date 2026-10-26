@@ -30,7 +30,15 @@ jobs:
         env:
           MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
           MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
         run: |
+          # A signed but unnotarized DMG is still blocked by Gatekeeper, so don't ship one by accident.
+          if [[ -z "$APPLE_ID" || -z "$APPLE_TEAM_ID" || -z "$APPLE_APP_PASSWORD" ]]; then
+            echo "::error::MACOS_CERTIFICATE is set, but APPLE_ID, APPLE_TEAM_ID and APPLE_APP_PASSWORD are needed to notarize."
+            exit 1
+          fi
           keychain="$RUNNER_TEMP/signing.keychain-db"
           keychain_password="$(uuidgen)"
           echo "$MACOS_CERTIFICATE" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
@@ -41,6 +49,12 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple: -k "$keychain_password" "$keychain"
           security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
           rm "$RUNNER_TEMP/certificate.p12"
+          identity="$(security find-identity -v -p codesigning "$keychain" | sed -n 's/.*"\(Developer ID Application: .*\)"/\1/p' | head -1)"
+          if [[ -z "$identity" ]]; then
+            echo "::error::No Developer ID Application identity in MACOS_CERTIFICATE. Export the certificate together with its private key."
+            exit 1
+          fi
+          echo "DETECTED_SIGN_IDENTITY=$identity" >> "$GITHUB_ENV"
 
       - name: Run tests
         run: swift test
@@ -48,14 +62,16 @@ jobs:
       - name: Build the DMG
         env:
           CONSTA_VERSION: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || '' }}
-          CONSTA_SIGN_IDENTITY: ${{ secrets.MACOS_SIGN_IDENTITY }}
+          MACOS_SIGN_IDENTITY: ${{ secrets.MACOS_SIGN_IDENTITY }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
         run: |
           export CONSTA_VERSION="${CONSTA_VERSION#v}"
           [[ -n "$CONSTA_VERSION" ]] || unset CONSTA_VERSION
-          [[ -n "$CONSTA_SIGN_IDENTITY" ]] || unset CONSTA_SIGN_IDENTITY
+          # MACOS_SIGN_IDENTITY is optional; by default use the identity found in the imported certificate.
+          identity="${MACOS_SIGN_IDENTITY:-${DETECTED_SIGN_IDENTITY:-}}"
+          [[ -z "$identity" ]] || export CONSTA_SIGN_IDENTITY="$identity"
           scripts/make-dmg.sh
 
       - uses: actions/upload-artifact@v4

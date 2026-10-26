@@ -41,7 +41,14 @@ else
 fi
 
 echo "==> Notarizing (this usually takes a few minutes)"
-xcrun notarytool submit "$dmg" "${notary_auth[@]}" --wait
+result="$(xcrun notarytool submit "$dmg" "${notary_auth[@]}" --wait --output-format plist)"
+submission="$(plutil -extract id raw - <<<"$result")"
+status="$(plutil -extract status raw - <<<"$result")"
+if [[ "$status" != "Accepted" ]]; then
+    echo "==> Notarization finished with status $status. Apple's log:" >&2
+    xcrun notarytool log "$submission" "${notary_auth[@]}" >&2 || true
+    exit 1
+fi
 xcrun stapler staple "$dmg"
 spctl --assess --type open --context context:primary-signature --verbose=2 "$dmg"
 echo "==> Done: $dmg (signed and notarized)"
