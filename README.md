@@ -11,7 +11,7 @@ A macOS menu bar app for tracking focus sessions by label, with goals, XP, level
 - **Badges.** Nine achievements, from First Step to a 30-day Marathon streak.
 - **Private.** Everything is stored locally with SwiftData. No account, no server.
 
-Mockups of every screen live in the [Consta Screens gallery](https://claude.ai/artifact/1cqrPNBm5Tqvim7gr6Sojm).
+Mockups and screenshots of every screen live in the [Consta Screens gallery](https://claude.ai/artifact/1cqrPNBm5Tqvim7gr6Sojm).
 
 ## Requirements
 
@@ -30,6 +30,14 @@ Or open `Package.swift` in Xcode and run the `Consta` scheme. The app has no Doc
 
 ```bash
 swift test
+```
+
+### Scripted UI runs
+
+Debug builds include a small driver for exercising the UI and taking screenshots without Accessibility or Screen Recording permission. It uses an in-memory store, so your data isn't touched. Commands are read from stdin, one per line (`open`, `click X Y`, `type TEXT`, `key return`, `sleep SECONDS`, `shot PATH`, `dump`, `quit`; see `Sources/Consta/Support/DebugDriver.swift`):
+
+```bash
+printf 'open\nsleep 1\nshot /tmp/idle.png\nquit\n' | CONSTA_DRIVER=1 swift run Consta
 ```
 
 ## Layout

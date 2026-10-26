@@ -14,15 +14,13 @@ struct SettingsView: View {
         VStack(spacing: 14) {
             ScreenHeader(title: "Labels", screen: $screen)
 
-            ScrollView {
+            FittedScrollView(maxHeight: 280) {
                 VStack(spacing: 6) {
                     ForEach(labels) { label in
                         LabelRow(label: label)
                     }
                 }
             }
-            .frame(maxHeight: 280)
-            .scrollBounceBehavior(.basedOnSize)
 
             GlassCard {
                 HStack {

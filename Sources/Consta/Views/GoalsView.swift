@@ -39,10 +39,11 @@ struct GoalsView: View {
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
                     .padding(.vertical, 20)
             }
 
-            ScrollView {
+            FittedScrollView(maxHeight: 360) {
                 VStack(spacing: 8) {
                     ForEach(shown) { goal in
                         if let spec = goal.spec, let label = goal.label {
@@ -54,8 +55,6 @@ struct GoalsView: View {
                     }
                 }
             }
-            .frame(maxHeight: 360)
-            .scrollBounceBehavior(.basedOnSize)
         }
     }
 }
