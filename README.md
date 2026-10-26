@@ -26,6 +26,34 @@ swift run Consta
 
 Or open `Package.swift` in Xcode and run the `Consta` scheme. The app has no Dock icon; look for the constellation icon in the menu bar.
 
+## Package a DMG
+
+```bash
+scripts/make-dmg.sh
+```
+
+This builds a release `Consta.app` (bundle id `com.banstack.consta`, menu bar only, with an app icon drawn by `scripts/make-icon.swift`) and wraps it in `dist/Consta-<version>.dmg` with a shortcut to Applications. `scripts/build-app.sh` builds just the app.
+
+Without signing credentials, the app is ad-hoc signed. It runs, but on someone else's Mac the first launch is blocked: they open **System Settings › Privacy & Security** and click **Open Anyway** once. To get a DMG that opens without a warning, sign with a Developer ID and notarize it (both need the Apple Developer Program):
+
+```bash
+xcrun notarytool store-credentials consta   # once: Apple ID, team ID, app-specific password
+CONSTA_SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
+CONSTA_NOTARY_PROFILE=consta \
+scripts/make-dmg.sh
+```
+
+### Releases
+
+Pushing a tag like `v0.1.0` runs `.github/workflows/release.yml`, which tests, builds the DMG and attaches it to a GitHub release. It signs and notarizes when these repository secrets are set and builds an unsigned DMG otherwise:
+
+| Secret | What it is |
+| --- | --- |
+| `MACOS_CERTIFICATE` | Your Developer ID Application certificate exported as .p12, base64-encoded (`base64 -i cert.p12 \| pbcopy`) |
+| `MACOS_CERTIFICATE_PASSWORD` | The .p12 export password |
+| `MACOS_SIGN_IDENTITY` | The identity name, e.g. `Developer ID Application: Your Name (TEAMID)` |
+| `APPLE_ID`, `APPLE_TEAM_ID`, `APPLE_APP_PASSWORD` | The Apple ID, team ID and app-specific password used for notarization |
+
 ## Tests
 
 ```bash
@@ -47,3 +75,4 @@ printf 'open\nsleep 1\nshot /tmp/idle.png\nquit\n' | CONSTA_DRIVER=1 swift run C
 | `Sources/ConstaKit` | Pure game logic: level curve, XP rules, goal progress and streaks, badges, and the `Progression` evaluator that works out what a session earns. No UI or persistence, fully unit-tested. |
 | `Sources/Consta` | The SwiftUI menu bar app. `Models/` holds the SwiftData models, `Support/` the session stopwatch and persistence helpers, `Views/` one file per screen. |
 | `Tests/ConstaKitTests` | Swift Testing tests for `ConstaKit`. |
+| `Packaging`, `scripts` | The app bundle's Info.plist and the app, icon and DMG build scripts. |
