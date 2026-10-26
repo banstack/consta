@@ -1,5 +1,6 @@
 #if DEBUG
 import AppKit
+import ConstaKit
 import SwiftData
 import SwiftUI
 
@@ -18,6 +19,7 @@ import SwiftUI
 ///     shot PATH             write a PNG of the window (menu bar strip and popover)
 ///     sleep SECONDS         wait before the next command
 ///     dump                  print the saved sessions, goals, labels, XP and badges
+///     sample                add a week of past sessions, for the History screen
 ///     frames                print the popover frame and focus state
 ///     quit
 @MainActor
@@ -75,6 +77,8 @@ enum DebugDriver {
             shot(to: argument)
         case "dump":
             dump()
+        case "sample":
+            addSampleSessions()
         case "frames":
             report("popover \(popover?.frame ?? .zero) key \(popover?.isKeyWindow ?? false) active \(NSApp.isActive)")
         case "quit":
@@ -96,6 +100,34 @@ enum DebugDriver {
         let labels = ((try? context.fetch(FetchDescriptor<ActivityLabel>(sortBy: [SortDescriptor(\.createdAt)]))) ?? []).map(\.name)
         report("labels \(labels)")
         report("xp \(ProgressStore.totalXP(context)) badges \(((try? context.fetch(FetchDescriptor<BadgeUnlock>())) ?? []).map(\.badgeID))")
+    }
+
+    /// A week of made-up sessions on the starter labels: (days ago, label index, start hour, minute, minutes, note).
+    private static func addSampleSessions() {
+        guard let context = container?.mainContext else { return }
+        let labels = (try? context.fetch(FetchDescriptor<ActivityLabel>(sortBy: [SortDescriptor(\.createdAt)]))) ?? []
+        guard labels.count >= 4 else { return report("needs the four starter labels") }
+        let plan: [(Int, Int, Int, Int, Double, String)] = [
+            (0, 0, 9, 12, 85, "Wrote the history view spec and the swatch palette."),
+            (0, 2, 12, 40, 35, "Two chapters of the SwiftData book."),
+            (1, 1, 10, 0, 90, "Settings page in glass."),
+            (1, 0, 13, 0, 80, ""),
+            (1, 3, 18, 10, 15, "Short run."),
+            (2, 0, 9, 30, 120, ""),
+            (4, 1, 14, 0, 45, "Icon sketches."),
+            (5, 0, 8, 45, 70, ""),
+        ]
+        let calendar = Calendar.current
+        for (daysAgo, index, hour, minute, minutes, note) in plan {
+            guard let day = calendar.date(byAdding: .day, value: -daysAgo, to: .now),
+                  let start = calendar.date(bySettingHour: hour, minute: minute, second: 0, of: day) else { continue }
+            let session = FocusSession(label: labels[index], start: start, end: start.addingTimeInterval(minutes * 60),
+                                       focusedSeconds: minutes * 60, note: note, xp: XPRules.focusXP(seconds: minutes * 60))
+            context.insert(session)
+            context.insert(XPEvent(key: "session:\(session.id.uuidString)", amount: session.xp, reason: "Focus time", date: start))
+        }
+        try? context.save()
+        report("added \(plan.count) sessions")
     }
 
     private static func report(_ message: String) {

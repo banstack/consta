@@ -19,8 +19,10 @@ struct GoalsView: View {
 
         VStack(spacing: 14) {
             ScreenHeader(title: "Goals", screen: $screen) {
-                Button("New goal", systemImage: "plus") { isAdding.toggle() }
-                    .buttonStyle(.glassProminent)
+                Button("New goal", systemImage: "plus") { withAnimation(.consta) { isAdding.toggle() } }
+                    .labelStyle(.iconOnly)
+                    .buttonStyle(.glass)
+                    .buttonBorderShape(.circle)
             }
 
             Picker("Period", selection: $period) {
@@ -31,7 +33,8 @@ struct GoalsView: View {
             .labelsHidden()
 
             if isAdding {
-                NewGoalForm(period: period) { isAdding = false }
+                NewGoalForm(period: period) { withAnimation(.consta) { isAdding = false } }
+                    .transition(.move(edge: .top).combined(with: .opacity))
             }
 
             if shown.isEmpty && !isAdding {
@@ -68,17 +71,17 @@ private struct GoalRow: View {
         let unit = status.goal.period == .daily ? "day" : "week"
         GlassCard {
             HStack(spacing: 8) {
-                Circle().fill(color).frame(width: 10, height: 10)
+                LabelDot(hex: label.colorHex)
                 Text(label.name).font(.callout.weight(.semibold))
                 Spacer()
                 if status.isMet {
-                    Label("Done", systemImage: "checkmark").font(.caption.weight(.semibold)).foregroundStyle(.green)
+                    Label("Done", systemImage: "checkmark").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
                 }
                 Label("\(status.streak) \(unit)\(status.streak == 1 ? "" : "s")", systemImage: "flame.fill")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(Color.streak)
             }
-            ProgressLine(fraction: status.fraction, color: color, height: 8)
+            ProgressLine(fraction: status.fraction, color: color, height: 4)
             HStack {
                 Text("\(DurationFormat.short(status.focusedSeconds)) of \(DurationFormat.short(status.goal.targetSeconds))")
                 Spacer()
@@ -119,7 +122,8 @@ private struct NewGoalForm: View {
                     }
                     onDone()
                 }
-                .buttonStyle(.glassProminent)
+                .buttonStyle(.ink)
+                .frame(width: 110)
                 .disabled(labelID == nil)
             }
         }

@@ -2,7 +2,7 @@ import ConstaKit
 import SwiftData
 import SwiftUI
 
-/// Pick a label and start. Kept deliberately small (see the v1.1 mockup).
+/// Pick a label and start. Kept deliberately small (see the v2 mockup).
 struct IdleView: View {
     @Binding var screen: Screen
     @Environment(SessionTracker.self) private var tracker
@@ -11,6 +11,7 @@ struct IdleView: View {
     @Query private var sessions: [FocusSession]
     @Query private var goals: [Goal]
     @State private var selectedID: UUID?
+    @Namespace private var selection
 
     /// Most recently used first; labels never used keep their creation order after those.
     private var recentLabels: [ActivityLabel] {
@@ -47,17 +48,18 @@ struct IdleView: View {
         HStack(spacing: 8) {
             Button { screen = .badges } label: {
                 HStack(spacing: 8) {
-                    LevelRing(progress: level)
+                    LevelRing(progress: level, size: 26)
                     Text("Level \(level.level)").font(.callout.weight(.semibold))
                     StreakBadge(days: DayStreak.current(sessions: records, now: .now))
                 }
             }
             .buttonStyle(.plain)
             Spacer()
-            GlassEffectContainer(spacing: 6) {
-                HStack(spacing: 6) {
+            GlassEffectContainer(spacing: 4) {
+                HStack(spacing: 4) {
+                    iconButton("clock", label: "History") { screen = .history }
                     iconButton("scope", label: "Goals") { screen = .goals }
-                    iconButton("slider.horizontal.3", label: "Settings") { screen = .settings }
+                    iconButton("gearshape", label: "Settings") { screen = .settings }
                 }
             }
         }
@@ -68,6 +70,7 @@ struct IdleView: View {
             .buttonStyle(.glass)
             .buttonBorderShape(.circle)
             .accessibilityLabel(label)
+            .help(label)
     }
 
     private var labelGrid: some View {
@@ -76,13 +79,17 @@ struct IdleView: View {
         return VStack(spacing: 6) {
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 6), GridItem(.flexible(), spacing: 6)], spacing: 6) {
                 ForEach(shown) { label in
-                    LabelChip(label: label, isSelected: label.id == selected?.id) { selectedID = label.id }
+                    LabelChip(label: label, isSelected: label.id == selected?.id, selection: selection) {
+                        withAnimation(.consta) { selectedID = label.id }
+                    }
                 }
             }
+            .padding(4)
+            .background(.primary.opacity(0.04), in: .rect(cornerRadius: 16))
             if !more.isEmpty {
                 Menu("More labels") {
                     ForEach(more) { label in
-                        Button(label.name) { selectedID = label.id }
+                        Button(label.name) { withAnimation(.consta) { selectedID = label.id } }
                     }
                 }
                 .menuStyle(.button)
@@ -97,12 +104,9 @@ struct IdleView: View {
             if let selected { tracker.start(label: selected) }
         } label: {
             Label("Start \(selected?.name ?? "")", systemImage: "play.fill")
-                .font(.headline)
-                .frame(maxWidth: .infinity, minHeight: 32)
+                .contentTransition(.interpolate)
         }
-        .buttonStyle(.glassProminent)
-        .tint(Color(hex: selected?.colorHex ?? "#0A5AD6"))
-        .controlSize(.large)
+        .buttonStyle(.ink)
         .disabled(selected == nil)
         .keyboardShortcut(.defaultAction)
     }
@@ -116,7 +120,7 @@ struct IdleView: View {
 
         VStack(spacing: 5) {
             if let status {
-                ProgressLine(fraction: status.fraction, color: Color(hex: label.colorHex))
+                ProgressLine(fraction: status.fraction, color: Color(hex: label.colorHex), height: 4)
             }
             HStack {
                 if let status {
@@ -136,15 +140,18 @@ struct IdleView: View {
     }
 }
 
+/// One label in the picker. The selected one sits on a raised pane that slides between chips.
 struct LabelChip: View {
     let label: ActivityLabel
     let isSelected: Bool
+    let selection: Namespace.ID
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: 8) {
-                Circle().fill(Color(hex: label.colorHex)).frame(width: 8, height: 8)
+                LabelDot(hex: label.colorHex)
+                    .opacity(isSelected ? 1 : 0.75)
                 Text(label.name).lineLimit(1)
                 Spacer(minLength: 0)
             }
@@ -152,14 +159,16 @@ struct LabelChip: View {
             .padding(.horizontal, 12)
             .frame(height: 36)
             .contentShape(.rect)
+            .background {
+                if isSelected {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(.background)
+                        .shadow(color: .black.opacity(0.08), radius: 6, y: 2)
+                        .matchedGeometryEffect(id: "selected", in: selection)
+                }
+            }
         }
         .buttonStyle(.plain)
-        .glassEffect(isSelected ? .regular.tint(Color(hex: label.colorHex).opacity(0.25)).interactive() : .regular.interactive(),
-                     in: .rect(cornerRadius: 12))
-        .overlay {
-            RoundedRectangle(cornerRadius: 12)
-                .strokeBorder(Color(hex: label.colorHex), lineWidth: isSelected ? 1.5 : 0)
-        }
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }

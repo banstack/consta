@@ -11,7 +11,7 @@ struct LevelRing: View {
             Circle().stroke(.quaternary, lineWidth: size / 9)
             Circle()
                 .trim(from: 0, to: progress.fraction)
-                .stroke(.tint, style: StrokeStyle(lineWidth: size / 9, lineCap: .round))
+                .stroke(.primary, style: StrokeStyle(lineWidth: size / 9, lineCap: .round))
                 .rotationEffect(.degrees(-90))
             Text("\(progress.level)")
                 .font(.system(size: size * 0.4, weight: .bold))
@@ -29,7 +29,7 @@ struct StreakBadge: View {
     var body: some View {
         Label("\(days)", systemImage: "flame.fill")
             .font(.caption.weight(.semibold))
-            .foregroundStyle(.orange)
+            .foregroundStyle(Color.streak)
             .labelStyle(.titleAndIcon)
             .accessibilityLabel("\(days)-day streak")
     }
@@ -48,18 +48,21 @@ struct ProgressLine: View {
             }
         }
         .frame(height: height)
+        .animation(.consta, value: fraction)
     }
 }
 
-/// A rounded glass panel for grouping content inside the popover.
+/// A lighter pane that groups content on the popover's glass. Glass on glass muddies, so this is a
+/// translucent fill rather than another glass layer.
 struct GlassCard<Content: View>: View {
+    var padding: CGFloat = 12
     @ViewBuilder var content: Content
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) { content }
-            .padding(12)
+            .padding(padding)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .glassEffect(.regular, in: .rect(cornerRadius: 16))
+            .background(.background.opacity(0.55), in: .rect(cornerRadius: 16))
     }
 }
 

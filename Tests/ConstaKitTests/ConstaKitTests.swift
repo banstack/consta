@@ -112,3 +112,37 @@ private func session(_ label: UUID?, day: Int, hour: Int = 10, minutes: Double) 
         #expect(DurationFormat.short(10800) == "3h")
     }
 }
+
+@Suite struct LabelPaletteTests {
+    @Test func tenDistinctColors() {
+        #expect(LabelPalette.all.count == 10)
+        #expect(Set(LabelPalette.all.map(\.hex)).count == 10)
+    }
+
+    @Test func legacySeedsMapIntoThePalette() {
+        let hexes = Set(LabelPalette.all.map(\.hex))
+        #expect(LabelPalette.legacySeedColors.values.allSatisfy(hexes.contains))
+    }
+
+    @Test func suggestsFirstUnusedThenLeastUsed() {
+        #expect(LabelPalette.suggestion(avoiding: []).name == "Blue")
+        #expect(LabelPalette.suggestion(avoiding: ["#4c7bd9", "#6E6AD8"]).name == "Violet")
+        let everyColor = LabelPalette.all.map(\.hex)
+        #expect(LabelPalette.suggestion(avoiding: everyColor + everyColor.dropLast()).name == "Slate")
+    }
+}
+
+@Suite struct SessionHistoryTests {
+    @Test func lastSevenDaysOldestFirst() {
+        let sessions = [
+            session(nil, day: 26, minutes: 30),
+            session(nil, day: 26, hour: 14, minutes: 15),
+            session(nil, day: 25, minutes: 60),
+            session(nil, day: 19, minutes: 90), // eight days back: left out
+        ]
+        let totals = SessionHistory.dailyTotals(sessions: sessions, now: date(26, 18), calendar: utc)
+        #expect(totals.count == 7)
+        #expect(totals.first?.day == utc.startOfDay(for: date(20)))
+        #expect(totals.map(\.seconds) == [0, 0, 0, 0, 0, 3600, 2700])
+    }
+}
