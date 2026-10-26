@@ -41,10 +41,10 @@ struct SettingsView: View {
             VStack(spacing: 4) {
                 SectionTitle("General")
                 GlassCard(padding: 4) {
-                    Toggle("Show timer in menu bar", isOn: $showTimer)
+                    SwitchRow("Show timer in menu bar", isOn: $showTimer)
                         .padding(.horizontal, 10)
                         .frame(height: 34)
-                    Toggle("Open at login", isOn: Binding(get: { opensAtLogin }, set: setOpensAtLogin))
+                    SwitchRow("Open at login", isOn: Binding(get: { opensAtLogin }, set: setOpensAtLogin))
                         .padding(.horizontal, 10)
                         .frame(height: 34)
                         .disabled(!AppVersion.isBundled)
@@ -129,5 +129,24 @@ enum AppVersion {
         guard let version = info["CFBundleShortVersionString"] as? String else { return "Development build" }
         let build = info["CFBundleVersion"] as? String ?? "?"
         return "Version \(version) (build \(build))"
+    }
+}
+
+/// A switch pinned to the trailing edge of its row, with the title on the leading edge.
+private struct SwitchRow: View {
+    let title: String
+    @Binding var isOn: Bool
+
+    init(_ title: String, isOn: Binding<Bool>) {
+        self.title = title
+        _isOn = isOn
+    }
+
+    var body: some View {
+        HStack {
+            Text(title)
+            Spacer()
+            Toggle(title, isOn: $isOn).labelsHidden()
+        }
     }
 }
